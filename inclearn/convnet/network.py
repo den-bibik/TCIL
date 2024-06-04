@@ -94,6 +94,15 @@ class BasicNet(nn.Module):
 
         logits = self.classifier(features)
 
+        print(f'debug: features.shape {features.shape}, last_dim {last_dim}')
+
+        last_features = features[:, -last_dim:]
+        eps = 1e-8
+        entropy = (last_features.std(-1) ** 2 + eps).log().sum()
+
+        print(f'debug: entropy {entropy.shape}, entropy {entropy}')
+
+
         div_logits = self.aux_classifier(features[:, -last_dim:]) if self.ntask > 1 else None
 
         return {'feature': features, 'logit': logits, 'div_logit': div_logits, 'features': feature}
