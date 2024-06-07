@@ -1,78 +1,43 @@
-<div align="center">
+В данной работе предлагается улучшение динамических архитектур для обучения с добавлением новых классов (class incremental learning),
+основанное на анализе потока информации между последовательными стадиями обучения.
 
-# TCIL
-
-## Resolving Task Confusion in Dynamic Expansion Architectures for Class Incremental Learning
-
-[![Paper](https://img.shields.io/badge/arXiv-2212.14284-brightgreen)](https://arxiv.org/abs/2212.14284)
-![AAAI](https://img.shields.io/badge/AAAI-2023-%2312457A)
-[![bilibili](https://img.shields.io/badge/bilibili-link-%23ff69b4)](https://www.bilibili.com/video/BV1L14y1u7XV/)
+![TCIL architercture](https://raw.githubusercontent.com/YellowPancake/TCIL/main/pictures/TCIL.png)
 
 
-![TCIL main figure](pictures/TCIL.png)
+Была модифицирована функция потерь в методе [TCIL](https://github.com/YellowPancake/TCIL), был введен регуляризатор, учитывающий специфические особенности обучения с добавлением новых классов.
 
+$`L^{i}_{reg} = \sum_{F_i}\log\left(\sigma_{batch }\left(F_i\right ) \right )`$, $`F_i`$ - набор активаций i-го энкодера 
 
-</div>
+$`L = L_{TCIL} + w_{reg} * \left(-L^{n}_{reg} + \sum_{i=1..n-1} L^{i}_{reg}) \right )`$ , $`n`$ - номер текущей стадии обучения
 
 
 
-# Datasets
 
-- Training datasets
-    1. CIFAR100: 
-        CIFAR100 dataset will be auto-downloaded.
-    2. ImageNet100:
-       ImageNet100 is a subset of ImageNet. You need to download ImageNet first, and split the dataset refer to [ImageNet100_Split](https://github.com/arthurdouillard/incremental_learning.pytorch).
- 
-- Class ordering
-    - We use the class ordering proposed by [DER](https://github.com/Rhyssiyan/DER-ClassIL.pytorch).
- 
-- Structure of `data` directory
-    ```
-    data
-    ├── cifar100
-    │   └── cifar-100-python
-    │       ├── train
-    │       ├── test
-    │       ├── meta
-    │       └── file.txt~
-    │      
-    ├── imagenet100
-    │   ├── train
-    │   └── val
-    ```
- 
-# Environment
-You can find all the libraries in the `requirements.txt`, and configure the experimental environment with the following commands.
+Этот регуляризатор повышает энтропию для текущей задачи, одновременно уменьшая энтропию для предыдущих задач. Это способствует уменьшению эффекта катастрофического забывания и более точному различению между классами из разных шагов обучения.
 
+Наш метод улучшает существующий state-of-the-art подход TCIL. В результате применения нашего подхода, экспериментально подтверждено улучшение точности на наборе данных CIFAR100.  В сравнении с текущими методами, наш подход демонстрирует превосходство в большинстве экспериментов, показывая улучшение как top-1, так и top-5 точности
+
+
+
+
+
+## Результаты
+
+### Total accuracy top1/top5
+
+
+| pretrain <br/> classes | num finetune <br/> stages | OUR <br/>  $`w_{reg}=2\mathrm{e}{-5}`$ | TCIL            |
+|------------------------|---------------------------|----------------------------------------|-----------------|
+| 0                      | 5                         | **70.14**/91.77                        | 69.51/**92.17** |
+| 0                      | 10                        | **67.3/90.24**                         | 65.79/89.99     |
+| 0                      | 20                        | **63.26/87.6**                         | 62.47/86.95     |
+|                        |                           |                                        |                 |
+| 50                     | 2                         | **72.66/92.74**                        | 72.61/92.4      |
+| 50                     | 5                         | **71.03/91.93**                        | 70.11/91.48     |
+| 50                     | 10                        | **69.21/91.36**                        | 68.24/89.97     |
+
+
+Для воспроизведения результатов:
+```shell
+sh scripts/run.sh
 ```
-conda create -n TCIL python=3.8
-conda install pytorch==1.8.1 torchvision==0.9.1 cudatoolkit=11.1 -c pytorch
-pip install -r requirements.txt
-```
-Thanks for the great code base from [DER](https://github.com/Rhyssiyan/DER-ClassIL.pytorch).
-# Launching an experiment
-## Train
-`sh scripts/run.sh`
-## Eval
-`sh scripts/inference.sh`
-## Prune
-`sh scripts/prune.sh`
-
-
-# Results
-
-## Rehearsal Setting
-
-![CIFAR figure rehearsal results](pictures/cifar_mem.png)
-![ImageNet figure rehearsal results](pictures/imagenet_mem.png)
-
-## Non-Rehearsal Setting
-
-![CIFAR and ImageNet figure non-rehearsal results](pictures/non_mem.png)
-
-## Checkpoints
-
-Get the trained models from [BaiduNetdisk(passwd:q3eh)](https://pan.baidu.com/s/1G0XVZCaaZ2LmM_eppr3cXA). 
-(We both offer the training logs in the same file)
-

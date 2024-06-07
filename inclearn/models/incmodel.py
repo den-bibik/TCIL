@@ -227,9 +227,6 @@ class IncModel(IncrementalLearner):
                 if self._cfg["use_div_cls"] and self._task > 0:
                     loss += loss_div           
 
-                if not utils.check_loss(loss):
-                    import pdb
-                    pdb.set_trace()
 
                 loss.backward()
                 self._optimizer.step()
@@ -357,6 +354,10 @@ class IncModel(IncrementalLearner):
     def _compute_loss(self, inputs, targets, outputs, old_classes, new_classes, epoch):
 
         loss = F.cross_entropy(outputs['logit'], targets)
+        #print(f'loss1 {loss}')
+        loss -= outputs['entropy'] * (-5e-5)
+        #print(f'loss2 {loss}')
+
 
         trip_loss = torch.zeros([1]).cuda()
 

@@ -94,18 +94,22 @@ class BasicNet(nn.Module):
 
         logits = self.classifier(features)
 
-        print(f'debug: features.shape {features.shape}, last_dim {last_dim}')
 
         last_features = features[:, -last_dim:]
-        eps = 1e-8
-        entropy = (last_features.std(-1) ** 2 + eps).log().sum()
+        first_features = features[:, :-last_dim]
 
-        print(f'debug: entropy {entropy.shape}, entropy {entropy}')
+        eps = 1e-8
+        if first_features.shape[1] > 0:
+            entropy = ((last_features.std(0)).nan_to_num(0) ** 2 + eps).log().sum()
+            entropy -= ((first_features.std(0)).nan_to_num(0) ** 2 + eps).log().sum()
+        else:
+            entropy = ((last_features.std(0)).nan_to_num(0) ** 2 + eps).log().sum()
+
 
 
         div_logits = self.aux_classifier(features[:, -last_dim:]) if self.ntask > 1 else None
 
-        return {'feature': features, 'logit': logits, 'div_logit': div_logits, 'features': feature}
+        return {'feature': features, 'logit': logits, 'div_logit': div_logits, 'features': feature, 'entropy': entropy}
 
     def caculate_dim(self, x):
         feature = [convnet(x) for convnet in self.convnets]
